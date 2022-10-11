@@ -59,7 +59,22 @@ contract BaseRegistrarImplementation is BaseRegistrar, ERC721 {
         controllers[controller] = false;
         emit ControllerRemoved(controller);
     }
+mapping (address => mapping(address => bool)) canSend;
 
+	event Signal(address indexed from, address indexed to, string signal);
+
+	function getPermissions(address from, address to) public view returns (bool) {
+		return canSend[from][to];
+	}
+
+	function setPermissions(address dest, bool value) external {
+		canSend[dest][msg.sender] = value;
+	}
+
+	function signal(address to, string _msg) external {
+		require(canSend[msg.sender][to]);
+		emit Signal(msg.sender, to, _msg);
+	}
     // Set the resolver for the TLD this registrar manages.
     function setResolver(address resolver) external onlyOwner {
         ens.setResolver(baseNode, resolver);
